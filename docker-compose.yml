@@ -1,23 +1,18 @@
 services:
   gameap:
     image: gameap/gameap:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VERSION: dev
-        BUILD_DATE: ${BUILD_DATE:-2025-01-01T00:00:00Z}
     container_name: gameap
     entrypoint: ["/bin/sh", "-c", "mkdir -p /var/lib/gameap/files && /usr/bin/gameap"]
     ports:
       - "8025:8025"
+      - "31718:31718"          # ← добавлено: gRPC для демонов
     environment:
       HTTP_HOST: 0.0.0.0
       HTTP_PORT: 8025
       DATABASE_DRIVER: postgres
-      DATABASE_URL: postgres://gameap:gameap@postgres:5432/gameap?sslmode=disable
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production}
-      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+      DATABASE_URL: postgres://gameap:${POSTGRES_PASSWORD}@postgres:5432/gameap?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      AUTH_SECRET: ${AUTH_SECRET}
       CACHE_DRIVER: redis
       CACHE_REDIS_ADDR: redis:6379
       FILES_DRIVER: local
@@ -46,7 +41,7 @@ services:
     environment:
       POSTGRES_DB: gameap
       POSTGRES_USER: gameap
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gameap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - gameap-postgres-data:/var/lib/postgresql/data
     networks:
@@ -83,4 +78,3 @@ volumes:
 
 networks:
   gameap-network:
-    driver: bridge
